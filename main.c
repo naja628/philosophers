@@ -1,23 +1,9 @@
+#include <stdlib.h>
+#include <time.h>
 #include <pthread.h>
+#include <string.h>
 #include "time_ops.h"
-
-typedef struct s_shared
-{
-	int				nphilo;
-	int				timetoeat;
-	int				timetosleep;
-	int				timetodie;
-	int				nmeals;
-	char			*forks;
-	pthread_mutex_t	*fork_access;
-	char			done;
-}	t_shared;
-
-typedef struct	s_data_wrap
-{
-	int 		id;
-	t_shared	*shared;
-}	t_data_wrap;
+#include "philo.h"
 
 // note freed by 'ft_init_philo'
 t_data_wrap	*ft_new_arg(t_shared *shared, int id)
@@ -30,13 +16,15 @@ t_data_wrap	*ft_new_arg(t_shared *shared, int id)
 		return (NULL);
 	ret->shared = shared;
 	ret->id = id;
+	return (ret);
 }
 
+#include <stdio.h>
 static void	ft_init_shared_resources(t_shared *shared, int ac, char **av)
 {
-	if (ac < 4 || ac > 5)
+	if (ac < 5 || 6 < ac)
 		//TODO error
-		return (1);
+		return ;
 	// TODO atoi -> ft_atoi
 	// maybe use array? 
 	shared->nphilo = atoi(av[1]);
@@ -44,8 +32,9 @@ static void	ft_init_shared_resources(t_shared *shared, int ac, char **av)
 	shared->timetosleep = atoi(av[3]);
 	shared->timetodie = atoi(av[4]);
 	shared->nmeals = -1;
-	shared->done = 0;
-	if (ac == 5)
+	shared->first_blood = 0;
+	printf("%d philos\n", shared->nphilo);
+	if (ac == 6)
 		shared->nmeals = atoi(av[5]);
 	shared->fork_access = malloc(sizeof(pthread_mutex_t));
 	shared->forks = malloc(shared->nphilo);
@@ -53,9 +42,9 @@ static void	ft_init_shared_resources(t_shared *shared, int ac, char **av)
 		// TODO error
 		return ;
 	memset(shared->forks, 1, shared->nphilo);
-	if (pthread_mutex_init(shared->fork_access) == ERROR)
+	if (pthread_mutex_init(shared->fork_access, NULL) != 0)
 		// deal with error
-		;
+		return ;
 	return ;
 }
 
@@ -65,7 +54,6 @@ static void	ft_destroy_shared(t_shared *shared)
 	free(shared->fork_access);
 	free(shared->forks);
 }
-#define TIME_ATOM 500
 
 int	main(int ac, char **av)
 {
@@ -75,16 +63,19 @@ int	main(int ac, char **av)
 	t_data_wrap	*arg;
 
 	ft_init_shared_resources(&shared, ac, av);
+	// start chrono now
+	ft_timestamp(1);
 	i = 0;
 	threads = malloc(sizeof(pthread_t) * shared.nphilo);
 	while (i < shared.nphilo)
 	{
-		arg = ft_new_arg(shared, i);
+		arg = ft_new_arg(&shared, i);
 		pthread_create(threads + i, NULL, ft_philo, arg);
 		++i;
+		printf("philo was born \n");
 	}
 	// i don't think we need this cuz join auto-waits
-//	while (!shared->done)
+//	while (!shared->first_blood)
 //		usleep(TIME_ATOM);
 	i = 0;
 	while (i < shared.nphilo)
@@ -92,6 +83,6 @@ int	main(int ac, char **av)
 		pthread_join(threads[i], NULL);
 		++i;
 	}
-	ft_destroy_shared(shared);
+	ft_destroy_shared(&shared);
 	return (0);
 }
