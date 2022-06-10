@@ -1,112 +1,95 @@
-#include <stdlib.h>
-#include <sys/time.h>
-#include <unistd.h>
-#include <pthread.h>
-#include <stdio.h>
-#include "time_ops.h"
 #include "philo.h"
 
-/* sensible mod */
-static int	rem(int x, int d)
+void	*ft_philo_routine(void *arg)
 {
-	if (x < 0)
-		return (x % d + d);
-	return (x % d);
-}
+	t_philo		*philo;
+	t_shared	*shared;
 
-static void	ft_init_philo(t_philo_data *data, void *arg)
-{
-	data->shared = ((t_data_wrap *) arg)->shared;
-	data->id = ((t_data_wrap *) arg)->id;
-	data->nmeals = 0;
-	gettimeofday(&(data->last_ate), NULL);
-	data->finished = 0;
-	free(arg);
-}
-
-/* wait dur_ms milliseconds but interrupt wait if the philo dies or the 
- * simulation must end */
-static void	ft_mortal_wait(t_shared *shared, t_philo_data *data, int dur_ms)
-{
-	struct timeval	now;
-	int				diff;
-
-	gettimeofday(&now, NULL);
-	diff = ft_tv_diff_ms(&now, &(data->last_ate));
-	while (diff <= dur_ms)
+	philo = (t_philo *) arg;
+	shared = ((t_philo *) arg)->shared;
+	// stagger based on parity?
+	while (!(shared->done))
 	{
-		if (diff > shared->timetodie)
-		{
-			printf("%d %d is dead\n", ft_timestamp(0), data->id + 1); 
-			shared->first_blood = 1;
-		}
-		if (shared->first_blood || diff > shared->timetodie)
-		{
-			data->finished = 1;
-			break;
-		}
-		// TODO deal with nmeals thingy
-		usleep(TIME_ATOM);
-		gettimeofday(&now, NULL);
-		diff = ft_tv_diff_ms(&now, &(data->last_ate));
-	}
-}
-
-static void	ft_think(t_shared *shared, t_philo_data *data)
-{
-	printf("%d %d is thinking\n", ft_timestamp(0), data->id + 1); 
-	while (!data->finished)
-	{
-//		printf("1\n");
-		pthread_mutex_lock(shared->fork_access);
-//		printf("1.5\n");
-//		printf("id is %d,", data->id);
-//		printf("lr forks are %d %d\n", rem(data->id, shared->nphilo), rem(data->id + 1, shared->nphilo));
-		if (shared->forks[rem(data->id, shared->nphilo)]
-				&& shared->forks[rem(data->id + 1, shared->nphilo)])
-		{
-//			printf("2\n");
-			shared->forks[rem(data->id, shared->nphilo)] = 0;
-			printf("%d %d has taken a fork\n", ft_timestamp(0), data->id + 1); 
-			shared->forks[rem(data->id + 1, shared->nphilo)] = 0;
-			printf("%d %d has taken a fork\n", ft_timestamp(0), data->id + 1); 
-//			printf("3\n");
-			break;
-		}
-//		printf("4\n");
-		pthread_mutex_unlock(shared->fork_access);
-		ft_mortal_wait(shared, data, 1);
-	}
-	pthread_mutex_unlock(shared->fork_access);
-}
-
-static void	ft_eat_then_sleep(t_shared *shared, t_philo_data *data)
-{
-	gettimeofday(&(data->last_ate), NULL);
-	printf("%d %d is eating\n", ft_timestamp(0), data->id + 1); 
-	++(data->nmeals);
-	ft_mortal_wait(shared, data, shared->timetoeat);
-	pthread_mutex_lock(shared->fork_access);
-	shared->forks[rem(data->id, shared->nphilo)] = 1;
-	shared->forks[rem(data->id + 1, shared->nphilo)] = 1;
-	pthread_mutex_unlock(shared->fork_access);
-	if (data->finished)
-		return ;
-	printf("%d %d is sleeping\n", ft_timestamp(0), data->id + 1); 
-	ft_mortal_wait(shared, data, shared->timetosleep);
-}
-
-/* philo thread, routine to be passed to 'pthread_create' */
-void	*ft_philo(void *arg)
-{
-	t_philo_data	data;
-
-	ft_init_philo(&data, arg);
-//	printf("%d init ok\n", data.id + 1);
-	while (!data.finished)
-	{
-		ft_think(data.shared, &data);
-		ft_eat_then_sleep(data.shared, &data);
+		ft_think(shared, philo);
+		ft_eat(shared, philo);
+		ft_sleep(shared, philo);
 	}
 	return (NULL);
+}
+
+void	ft_think(t_shared *shared, t_philo *philo)
+{
+	ft_status(shared, philo, "is thinking");
+	ft_lock2(philo->left_fork, philo->right_fork, &(shared->fork_access));
+	if (shared->done)
+	{
+		ft_unlock_xmutex(philo->left_fork);
+		ft_unlock_xmutex(philo->right_fork);
+		return ;
+	}
+	ft_status(shared, philo, "has taken a fork");
+	ft_status(shared, philo, "has taken a fork");
+}
+
+void	ft_eat(t_shared *shared, t_philo *philo)
+{
+	ft_status(shared, philo, "is eating");
+	philo->last_ate = ft_timestamp(0);
+	ft_philo_wait(shared, philo, shared->time_to_eat);
+	ft_times_eaten(shared, philo);
+	ft_unlock_xmutex(philo->left_fork);
+	ft_unlock_xmutex(philo->right_fork);
+}
+
+void	ft_sleep(t_shared *shared, t_philo *philo)
+{
+	ft_status(shared, philo, "is sleeping");
+	ft_philo_wait(shared, philo, shared->time_to_sleep);
+}
+
+void	ft_status(t_shared *shared, t_philo *philo, char const *msg)
+{
+	pthread_mutex_lock(&(shared->done_mutex));
+	if (!shared->done)
+		printf("%d %d %s\n", ft_timestamp(0), philo->index, msg);
+	pthread_mutex_unlock(&(shared->done_mutex));
+}
+
+void	ft_philo_wait(t_shared *shared, t_philo *philo, unsigned int dur_ms)
+{
+	const int		dt = 500;
+	unsigned int	start;
+	unsigned int	now;
+
+	start = ft_timestamp(FALSE);
+	now = start;
+	while (now < start + dur_ms)
+	{
+		if (now > philo->last_ate + shared->time_to_die)
+		{
+			if (!(shared->done))
+			{
+				pthread_mutex_lock(&(shared->done_mutex));
+				shared->done = TRUE;
+				printf("%d %d %s\n", ft_timestamp(0), philo->index, "died");
+				pthread_mutex_unlock(&(shared->done_mutex));
+			}
+			return ;
+		}
+		usleep(dt);
+		now = ft_timestamp(0);
+	}
+}
+
+void	ft_times_eaten(t_shared *shared, t_philo *philo)
+{
+	philo->times_eaten++;
+	if (philo->times_eaten == shared->nmeals)
+		shared->nsatiated++;
+	if (shared->nsatiated == shared->nphilo)
+	{
+		pthread_mutex_lock(&(shared->done_mutex));
+		shared->done = TRUE;
+		pthread_mutex_unlock(&(shared->done_mutex));
+	}
 }

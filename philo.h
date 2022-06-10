@@ -1,40 +1,41 @@
 #ifndef PHILO_H
 # define PHILO_H
 
-// smallest time unit waited (in us)
-# define TIME_ATOM 500
+# include <pthread.h>
+# include <stdio.h>
+# include <unistd.h>
+# include "xmutex.h"
+# include "timestamp.h"
 
-/* type meant to contain the ressources shared by all threads
- * ie, the shared field should point to the same object for all threads */
 typedef struct s_shared
 {
-	char			first_blood;
-	int				nphilo;
-	int				timetoeat;
-	int				timetosleep;
-	int				timetodie;
+	t_bool			done;
+	unsigned int	time_to_die;
+	unsigned int	time_to_sleep;
+	unsigned int	time_to_eat;
 	int				nmeals;
-	char			*forks;
-	pthread_mutex_t	*fork_access;
+	int				nphilo;
+	int				nsatiated;
+	pthread_mutex_t	done_mutex;
+	pthread_mutex_t	fork_access;
 }	t_shared;
 
-/* data each philo (ie thread) needs access to */
-typedef struct	s_philo_data
+typedef struct	s_philo
 {
-	struct timeval	last_ate;
-	int				id;
-	int				nmeals;
-	char			finished;
+	int				index;
+	int				times_eaten;
+	unsigned int	last_ate;
 	t_shared		*shared;
-}	t_philo_data;
+	t_xmutex		*left_fork;
+	t_xmutex		*right_fork;
+}	t_philo;
 
-/* (void *) wrapper used to pass the right info to 'pthread_create' */
-typedef struct	s_data_wrap
-{
-	int 		id;
-	t_shared	*shared;
-}	t_data_wrap;
-
-void	*ft_philo(void *arg);
+void	*ft_philo_routine(void *arg);
+void	ft_think(t_shared *shared, t_philo *philo);
+void	ft_eat(t_shared *shared, t_philo *philo);
+void	ft_sleep(t_shared *shared, t_philo *philo);
+void	ft_status(t_shared *shared, t_philo *philo, char const *msg);
+void	ft_philo_wait(t_shared *shared, t_philo *philo, unsigned int dur_ms);
+void	ft_times_eaten(t_shared *shared, t_philo *philo);
 
 #endif

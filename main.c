@@ -1,88 +1,90 @@
-#include <stdlib.h>
-#include <time.h>
 #include <pthread.h>
-#include <string.h>
-#include "time_ops.h"
+#include <stdlib.h>
+#include <unistd.h> 
 #include "philo.h"
+#include "timestamp.h"
+#include "xmutex.h"
+#include "atoi_errcode.h"
 
-// note freed by 'ft_init_philo'
-t_data_wrap	*ft_new_arg(t_shared *shared, int id)
+void	ft_puterr(char const *s)
 {
-	t_data_wrap	*ret;
+	size_t	len;
 
-	ret = malloc(sizeof(t_data_wrap));
-	if (!ret)
-		// TODO error
-		return (NULL);
-	ret->shared = shared;
-	ret->id = id;
-	return (ret);
+	len = 0;
+	while (s[len])
+		len++;
+	write (2, s, len);
 }
 
-#include <stdio.h>
-static void	ft_init_shared_resources(t_shared *shared, int ac, char **av)
+int	ft_init_shared(t_shared *shared, char **strargs)
 {
-	if (ac < 5 || 6 < ac)
-		//TODO error
-		return ;
-	// TODO atoi -> ft_atoi
-	// maybe use array? 
-	shared->nphilo = atoi(av[1]);
-	shared->timetoeat = atoi(av[2]);
-	shared->timetosleep = atoi(av[3]);
-	shared->timetodie = atoi(av[4]);
-	shared->nmeals = -1;
-	shared->first_blood = 0;
-	printf("%d philos\n", shared->nphilo);
-	if (ac == 6)
-		shared->nmeals = atoi(av[5]);
-	shared->fork_access = malloc(sizeof(pthread_mutex_t));
-	shared->forks = malloc(shared->nphilo);
-	if (!shared->fork_access | !shared->forks)
-		// TODO error
-		return ;
-	memset(shared->forks, 1, shared->nphilo);
-	if (pthread_mutex_init(shared->fork_access, NULL) != 0)
-		// deal with error
-		return ;
-	return ;
+	int	errcode;
+
+	errcode = 0;
+	// TODO change atoi to signed version
+	shared->nphilo = ft_atoi_errcode(strargs[1], &errcode);
+	shared->time_to_die = ft_atoi_errcode(strargs[2], &errcode);
+	shared->time_to_eat = ft_atoi_errcode(strargs[3], &errcode);
+	shared->time_to_sleep = ft_atoi_errcode(strargs[4], &errcode);
+	if (strargs[5])
+		shared->nmeals = ft_atoi_errcode(strargs[5], &errcode);
+	if (errcode)
+		return (1);
+	shared->nsatiated = 0;
+	pthread_mutex_init(&(shared->done_mutex), NULL);
+	pthread_mutex_init(&(shared->fork_access), NULL);
+	shared->done = FALSE;
 }
 
-static void	ft_destroy_shared(t_shared *shared)
+void	ft_destroy_shared(t_shared *shared)
 {
-	pthread_mutex_destroy(shared->fork_access);
-	free(shared->fork_access);
-	free(shared->forks);
+	pthread_mutex_destroy(&(shared->done_mutex));
+	pthread_mutex_destroy(&(shared->fork_access));
+}
+
+void	ft_init_philo(t_philo *philo, int i, t_shared *shared, t_xmutex *forks)
+{
+	philo->index = i + 1;
+	philo->times_eaten = 0;
+	philo->last_ate = ft_timestamp(0);
+	philo->shared = shared;
+	philo->left_fork = forks + i;
+	philo->right_fork = forks + ((i + 1) % shared->nphilo);
 }
 
 int	main(int ac, char **av)
 {
-	t_shared	shared;
-	int			i;
-	pthread_t	*threads;
-	t_data_wrap	*arg;
+	t_shared		shared;
+	pthread_t		*threads;
+	t_philo			*philos;
+	t_xmutex		*forks;
+	int				i;
 
-	ft_init_shared_resources(&shared, ac, av);
-	// start chrono now
-	ft_timestamp(1);
-	i = 0;
+	if (!(ac == 5 || ac == 6) || ft_init_shared(&shared, av) == 1)
+	{
+		ft_puterr("invalid arguments.\ncall with: ");
+		ft_puterr("philosophers num_philo time_to_die eat sleep [num_meals]\n");
+		return (1);
+	}
+	philos = malloc(sizeof(t_philo) * shared.nphilo);
 	threads = malloc(sizeof(pthread_t) * shared.nphilo);
+	forks = malloc(sizeof(t_xmutex) * shared.nphilo);
+	i = 0;
+	ft_timestamp(TS_RESET);
 	while (i < shared.nphilo)
 	{
-		arg = ft_new_arg(&shared, i);
-		pthread_create(threads + i, NULL, ft_philo, arg);
+		ft_init_philo(philos + i, i, &shared, forks);
+		pthread_create(threads + i, NULL, ft_philo_routine, philos + i);
 		++i;
-		printf("philo was born \n");
 	}
-	// i don't think we need this cuz join auto-waits
-//	while (!shared->first_blood)
-//		usleep(TIME_ATOM);
+	while (!shared.done)
+		usleep(500);
 	i = 0;
 	while (i < shared.nphilo)
-	{
-		pthread_join(threads[i], NULL);
-		++i;
-	}
+		pthread_join(threads[i++], NULL);
+	free(philos);
+	free(threads);
+	free(forks);
 	ft_destroy_shared(&shared);
 	return (0);
 }
