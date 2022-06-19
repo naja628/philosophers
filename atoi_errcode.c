@@ -30,10 +30,9 @@ static int	ft_try_update(int sign, t_uint *acc, t_uint digit)
 {
 	t_uint	max;
 
-	if (sign == 1)
-		max = INT_MAX;
-	else
-		max = (t_uint) -INT_MIN; // TODO compiler warning
+	max = INT_MAX;
+	if (sign == -1)
+		max++;
 	if (*acc <= max / 10)
 		*acc *= 10;
 	else
@@ -74,4 +73,17 @@ int	ft_atoi_errcode(const char *s, int *errcode)
 	if (*s != '\0')
 		*errcode = -1;
 	return (sign * acc);
+}
+
+int	ft_positive_atoi_errcode(const char *s, int *errcode)
+{
+	int	ret;
+
+	ret = ft_atoi_errcode(s, errcode);
+	if (*errcode || ret < 0)
+	{
+		*errcode = -1;
+		return (0);
+	}
+	return (ret);
 }

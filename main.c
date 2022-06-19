@@ -21,25 +21,25 @@ int	ft_init_shared(t_shared *shared, char **strargs)
 	int	errcode;
 
 	errcode = 0;
-	// TODO change atoi to signed version
-	shared->nphilo = ft_atoi_errcode(strargs[1], &errcode);
-	shared->time_to_die = ft_atoi_errcode(strargs[2], &errcode);
-	shared->time_to_eat = ft_atoi_errcode(strargs[3], &errcode);
-	shared->time_to_sleep = ft_atoi_errcode(strargs[4], &errcode);
+	shared->nphilo = ft_positive_atoi_errcode(strargs[1], &errcode);
+	shared->time_to_die = ft_positive_atoi_errcode(strargs[2], &errcode);
+	shared->time_to_eat = ft_positive_atoi_errcode(strargs[3], &errcode);
+	shared->time_to_sleep = ft_positive_atoi_errcode(strargs[4], &errcode);
 	if (strargs[5])
-		shared->nmeals = ft_atoi_errcode(strargs[5], &errcode);
+		shared->nmeals = ft_positive_atoi_errcode(strargs[5], &errcode);
 	if (errcode)
-		return (1);
+		return (-1);
 	shared->nsatiated = 0;
 	pthread_mutex_init(&(shared->done_mutex), NULL);
-	pthread_mutex_init(&(shared->fork_access), NULL);
+	pthread_mutex_init(&(shared->forks), NULL);
 	shared->done = FALSE;
+	return (0);
 }
 
 void	ft_destroy_shared(t_shared *shared)
 {
 	pthread_mutex_destroy(&(shared->done_mutex));
-	pthread_mutex_destroy(&(shared->fork_access));
+	pthread_mutex_destroy(&(shared->forks));
 }
 
 void	ft_init_philo(t_philo *philo, int i, t_shared *shared, t_xmutex *forks)
@@ -48,8 +48,8 @@ void	ft_init_philo(t_philo *philo, int i, t_shared *shared, t_xmutex *forks)
 	philo->times_eaten = 0;
 	philo->last_ate = ft_timestamp(0);
 	philo->shared = shared;
-	philo->left_fork = forks + i;
-	philo->right_fork = forks + ((i + 1) % shared->nphilo);
+	philo->lfork = forks + i;
+	philo->rfork = forks + ((i + 1) % shared->nphilo);
 }
 
 int	main(int ac, char **av)
@@ -60,7 +60,7 @@ int	main(int ac, char **av)
 	t_xmutex		*forks;
 	int				i;
 
-	if (!(ac == 5 || ac == 6) || ft_init_shared(&shared, av) == 1)
+	if (!(ac == 5 || ac == 6) || ft_init_shared(&shared, av) == -1)
 	{
 		ft_puterr("invalid arguments.\ncall with: ");
 		ft_puterr("philosophers num_philo time_to_die eat sleep [num_meals]\n");

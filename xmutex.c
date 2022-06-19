@@ -1,23 +1,39 @@
 #include "xmutex.h"
 
-void	ft_lock2(t_xmutex *a, t_xmutex *b, pthread_mutex_t *access)
+//void	ft_lock2(t_xmutex *a, t_xmutex *b, pthread_mutex_t *access)
+//{
+//	const int	dt = 500;
+//	t_bool		lock_success;
+//
+//	lock_success = FALSE;
+//	while (!lock_success)
+//	{
+//		pthread_mutex_lock(access);
+//		if (!a->locked && !b->locked)
+//		{
+//			ft_lock_xmutex(a);
+//			ft_lock_xmutex(b);
+//			lock_success = TRUE;
+//		}
+//		pthread_mutex_unlock(access);
+//		usleep(dt);
+//	}
+//}
+
+t_bool	ft_try_lock2(t_xmutex *a, t_xmutex *b, pthread_mutex_t *access)
 {
-	const int	dt = 500;
 	t_bool		lock_success;
 
 	lock_success = FALSE;
-	while (!lock_success)
+	pthread_mutex_lock(access);
+	if (!a->locked && !b->locked && &(a->mutex) != &(b->mutex))
 	{
-		pthread_mutex_lock(access);
-		if (!a->locked && !b->locked)
-		{
-			ft_lock_xmutex(a);
-			ft_lock_xmutex(b);
-			lock_success = TRUE;
-		}
-		pthread_mutex_unlock(access);
-		usleep(dt);
+		ft_lock_xmutex(a);
+		ft_lock_xmutex(b);
+		lock_success = TRUE;
 	}
+	pthread_mutex_unlock(access);
+	return (lock_success);
 }
 
 void	ft_init_xmutex(t_xmutex *m)
