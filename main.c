@@ -5,6 +5,7 @@
 #include "timestamp.h"
 #include "xmutex.h"
 #include "atoi_errcode.h"
+#include "launch_threads.h"
 
 void	ft_puterr(char const *s)
 {
@@ -36,20 +37,23 @@ int	ft_init_shared(t_shared *shared, char **strargs)
 	return (0);
 }
 
-void	ft_destroy_shared(t_shared *shared)
+static void	ft_destroy_shared(t_shared *shared)
 {
 	pthread_mutex_destroy(&(shared->done_mutex));
 	pthread_mutex_destroy(&(shared->forks));
 }
 
-void	ft_init_philo(t_philo *philo, int i, t_shared *shared, t_xmutex *forks)
+static int	ft_malloc_error3(void *a, void *b, void *c)
 {
-	philo->index = i + 1;
-	philo->times_eaten = 0;
-	philo->last_ate = ft_timestamp(0);
-	philo->shared = shared;
-	philo->lfork = forks + i;
-	philo->rfork = forks + ((i + 1) % shared->nphilo);
+	if (!a || !b || !c)
+	{
+		free(a);
+		free(b);
+		free(c);
+		ft_puterr("Fatal Error: bad alloc\n");
+		return (1);
+	}
+	return (0);
 }
 
 int	main(int ac, char **av)
@@ -58,7 +62,6 @@ int	main(int ac, char **av)
 	pthread_t		*threads;
 	t_philo			*philos;
 	t_xmutex		*forks;
-	int				i;
 
 	if (!(ac == 5 || ac == 6) || ft_init_shared(&shared, av) == -1)
 	{
@@ -69,22 +72,13 @@ int	main(int ac, char **av)
 	philos = malloc(sizeof(t_philo) * shared.nphilo);
 	threads = malloc(sizeof(pthread_t) * shared.nphilo);
 	forks = malloc(sizeof(t_xmutex) * shared.nphilo);
-	i = 0;
+	if (ft_malloc_error3(philos, threads, forks))
+		return (1);
 	ft_timestamp(TS_RESET);
-	while (i < shared.nphilo)
-	{
-		ft_init_philo(philos + i, i, &shared, forks);
-		pthread_create(threads + i, NULL, ft_philo_routine, philos + i);
-		++i;
-	}
+	ft_launch_threads(&shared, threads, philos, forks);
 	while (!shared.done)
-		usleep(500);
-	i = 0;
-	while (i < shared.nphilo)
-		pthread_join(threads[i++], NULL);
-	free(philos);
-	free(threads);
-	free(forks);
+		usleep(1000);
+	ft_collect_threads(&shared, threads, philos, forks);
 	ft_destroy_shared(&shared);
 	return (0);
 }

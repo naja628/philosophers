@@ -31,7 +31,7 @@ typedef struct s_philo
 }	t_philo;
 
 void	*ft_philo_routine(void *arg);
-void	ft_think(t_shared *shared, t_philo *philo);
+void	ft_think(t_shared *shared, t_philo *philo, int stagger);
 void	ft_eat(t_shared *shared, t_philo *philo);
 void	ft_sleep(t_shared *shared, t_philo *philo);
 

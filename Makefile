@@ -1,4 +1,5 @@
-SRC=atoi_errcode.c main.c philo.c timestamp.c xmutex.c philo_utils.c
+SRC=atoi_errcode.c main.c philo.c timestamp.c xmutex.c \
+	philo_utils.c launch_threads.c
 OBJ=${SRC:.c=.o}
 CFLAGS=-Wall -Wextra -Werror
 CC=gcc

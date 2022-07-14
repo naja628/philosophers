@@ -10,7 +10,7 @@ void	ft_status(t_shared *shared, t_philo *philo, char const *msg)
 
 void	ft_philo_wait(t_shared *shared, t_philo *philo, unsigned int dur_ms)
 {
-	const int		dt = 500;
+	const int		dt = 1000;
 	unsigned int	start;
 	unsigned int	now;
 

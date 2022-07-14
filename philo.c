@@ -5,24 +5,32 @@ void	*ft_philo_routine(void *arg)
 {
 	t_philo		*philo;
 	t_shared	*shared;
+	int			stagger;
 
 	philo = (t_philo *) arg;
 	shared = ((t_philo *) arg)->shared;
-	// stagger based on parity?
+	stagger = 1 + shared->nphilo / 25;
+	if (philo->index % 2 == 0)
+	{
+		ft_think(shared, philo, stagger);
+		ft_eat(shared, philo);
+		ft_sleep(shared, philo);
+	}
 	while (!(shared->done))
 	{
-		ft_think(shared, philo);
+		ft_think(shared, philo, 0);
 		ft_eat(shared, philo);
 		ft_sleep(shared, philo);
 	}
 	return (NULL);
 }
 
-void	ft_think(t_shared *shared, t_philo *philo)
+void	ft_think(t_shared *shared, t_philo *philo, int stagger)
 {
-	const int	dt_us = 500;
+	const int	dt_us = 1000;
 
 	ft_status(shared, philo, "is thinking");
+	ft_philo_wait(shared, philo, stagger);
 	while (!shared->done
 		&& !ft_try_lock2(philo->lfork, philo->rfork, &(shared->forks)))
 	{
