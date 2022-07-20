@@ -6,7 +6,7 @@
 /*   By: najacque <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/14 15:20:48 by najacque          #+#    #+#             */
-/*   Updated: 2022/07/14 15:20:48 by najacque         ###   ########.fr       */
+/*   Updated: 2022/07/20 15:41:58 by najacque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ void	*ft_philo_routine(void *arg)
 
 	philo = (t_philo *) arg;
 	shared = ((t_philo *) arg)->shared;
-	stagger = 1 + shared->nphilo / 25;
+	stagger = 1 + shared->nphilo / 15;
 	if (philo->index % 2 == 0)
 	{
 		ft_think(shared, philo, stagger);
