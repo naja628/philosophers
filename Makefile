@@ -4,7 +4,7 @@ OBJ=${SRC:.c=.o}
 CFLAGS=-Wall -Wextra -Werror
 CC=gcc
 LIB=-lpthread
-NAME=philosophers
+NAME=philo
 
 ${NAME}: ${OBJ}
 	${CC} ${CFLAGS} -o $@ $^ ${LIB}

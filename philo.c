@@ -9,18 +9,35 @@ void	*ft_philo_routine(void *arg)
 
 	philo = (t_philo *) arg;
 	shared = ((t_philo *) arg)->shared;
-	stagger = 1 + shared->nphilo / 25;
+	stagger = 1 + shared->nphilo / 15;
 	if (philo->index % 2 == 0)
 	{
 		ft_think(shared, philo, stagger);
 		ft_eat(shared, philo);
 		ft_sleep(shared, philo);
 	}
-	while (!(shared->done))
+	if (shared->nphilo % 2 == 1 && (philo->index == 1 || philo->index == shared->nphilo))
 	{
-		ft_think(shared, philo, 0);
-		ft_eat(shared, philo);
-		ft_sleep(shared, philo);
+		int prio = (philo->index == 1);
+		while (!(shared->done))
+		{
+			if (!prio)
+				ft_think(shared, philo, philo->last_ate + 2 * shared->time_to_eat + stagger - ft_timestamp(0));
+			else
+				ft_think(shared, philo, 0);
+			prio = !prio;
+			ft_eat(shared, philo);
+			ft_sleep(shared, philo);
+		}
+	}
+	else
+	{
+		while (!(shared->done))
+		{
+			ft_think(shared, philo, 0);
+			ft_eat(shared, philo);
+			ft_sleep(shared, philo);
+		}
 	}
 	return (NULL);
 }

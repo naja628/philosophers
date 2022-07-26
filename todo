@@ -1,0 +1,7 @@
+* bonus: satiation thread _________DONE
+* bonus: norminette et al. (makefile etc.)
+* bonus: maybe freer thingy
+	* at least -> free pids at beginning of process ____DONE
+* stagger thingy (odd num philo) ___QUASI-DONE
+* no bonus: protect nsatiated with mutex 
+that's it? 

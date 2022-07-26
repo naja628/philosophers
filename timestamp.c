@@ -1,8 +1,5 @@
 #include "timestamp.h"
 
-//// debug
-//#include <stdio.h>
-
 unsigned int	ft_timestamp(int reset)
 {
 	static struct timeval	start;
