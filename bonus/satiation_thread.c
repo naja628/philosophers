@@ -21,7 +21,7 @@ void	*ft_satiation_thread(void *data)
 	sem_wait(a->sems->guard_sem);
 	sem_post(a->sems->finished_sem);
 	free(data);
-	printf("pre-return \n");
+// 	printf("pre-return \n");
 	return (NULL);
 }
 
@@ -34,6 +34,7 @@ int ft_sat_thread(int nphilo, t_sems *sems, pthread_t *thread_buf)
 	a->sems = sems;
 	a->nphilo = nphilo;
 	pthread_create(thread_buf, NULL, ft_satiation_thread, a);
-	printf("detaching. %d\n", pthread_detach(*thread_buf));
+	pthread_detach(*thread_buf);
+// 	printf("detaching. %d\n", pthread_detach(*thread_buf));
 	return (FUN_NO_ERROR);
 }

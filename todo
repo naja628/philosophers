@@ -1,7 +1,8 @@
 * bonus: satiation thread _________DONE
-* bonus: norminette et al. (makefile etc.)
+* bonus: norminette et al. (makefile etc.) ____TODO
 * bonus: maybe freer thingy
 	* at least -> free pids at beginning of process ____DONE
-* stagger thingy (odd num philo) ___QUASI-DONE
-* no bonus: protect nsatiated with mutex 
+* stagger thingy (odd num philo) ___QUASI-DONE? (TODO check ok)
+* no bonus: protect nsatiated with mutex  ___DONE?
+* pthread and valgrind tests ___TODO
 that's it? 
