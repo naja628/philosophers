@@ -6,7 +6,7 @@
 /*   By: najacque <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/29 16:20:47 by najacque          #+#    #+#             */
-/*   Updated: 2022/07/29 16:20:47 by najacque         ###   ########.fr       */
+/*   Updated: 2022/07/29 16:24:39 by najacque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,7 +69,6 @@ static void	ft_subprocesses(t_args *a, t_sems *sems, pid_t *pids)
 	iphilo = 1;
 	while (iphilo <= a->nphilo)
 		kill(pids[iphilo++ - 1], SIGINT);
-	ft_puterr("killed subs\n");
 }
 
 int	main(int ac, char **av)
