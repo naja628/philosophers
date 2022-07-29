@@ -10,6 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <stdio.h>
 #include "philo_utils.h"
 
 void	ft_status(t_shared *shared, t_philo *philo, char const *msg)

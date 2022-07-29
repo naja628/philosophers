@@ -15,11 +15,6 @@
 
 void	ft_init_philo(t_philo *philo, int i, t_shared *shared, t_xmutex *forks)
 {
-	int	ifork;
-
-	ifork = 0;
-	while (ifork < shared->nphilo)
-		ft_init_xmutex(forks + ifork++);
 	philo->index = i + 1;
 	philo->times_eaten = 0;
 	philo->last_ate = ft_timestamp(0);
@@ -38,6 +33,7 @@ void	ft_launch_threads(t_shared *s, pthread_t *t, t_philo *p, t_xmutex *f)
 	{
 		while (i < s->nphilo)
 		{
+			ft_init_xmutex(f + i);
 			ft_init_philo(p + i, i, s, f);
 			pthread_create(t + i, NULL, ft_philo_odd, p + i);
 			++i;
@@ -47,6 +43,7 @@ void	ft_launch_threads(t_shared *s, pthread_t *t, t_philo *p, t_xmutex *f)
 	{
 		while (i < s->nphilo)
 		{
+			ft_init_xmutex(f + i);
 			ft_init_philo(p + i, i, s, f);
 			pthread_create(t + i, NULL, ft_philo_even, p + i);
 			++i;
@@ -60,7 +57,10 @@ void	ft_collect_threads(t_shared *s, pthread_t *t, t_philo *p, t_xmutex *f)
 
 	i = 0;
 	while (i < s->nphilo)
+	{
 		pthread_join(t[i++], NULL);
+		ft_destroy_xmutex(f + i++);
+	}
 	free(p);
 	free(t);
 	free(f);

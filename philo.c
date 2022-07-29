@@ -85,9 +85,9 @@ void	*ft_philo_odd(void *arg)
 	philo = (t_philo *) arg;
 	shared = ((t_philo *) arg)->shared;
 	stagger = 1 + shared->nphilo / 25;
-	ft_first_time_odd(philo, shared, stagger);
 	delay = (5 * shared->time_to_eat) / 2;
 	k = shared->nphilo / 2;
+	ft_first_time_odd(philo, shared, stagger);
 	while (!(shared->done))
 	{
 		if (philo->index / 2 % k == philo->times_eaten % k)

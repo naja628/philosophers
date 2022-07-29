@@ -40,6 +40,8 @@ int	ft_init_shared(t_shared *shared, char **strargs)
 	shared->time_to_sleep = ft_positive_atoi_errcode(strargs[4], &errcode);
 	if (strargs[5])
 		shared->nmeals = ft_positive_atoi_errcode(strargs[5], &errcode);
+	else
+		shared->nmeals = -1;
 	if (errcode)
 		return (-1);
 	shared->nsatiated = 0;

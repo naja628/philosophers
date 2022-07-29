@@ -59,6 +59,7 @@ void	ft_destroy_xmutex(t_xmutex *m)
 	pthread_mutex_destroy(&(m->mutex));
 }
 
+#include <stdio.h>
 void	ft_lock_xmutex(t_xmutex *m)
 {
 	pthread_mutex_lock(&(m->mutex));
