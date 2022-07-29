@@ -10,9 +10,9 @@
 #include "args.h"
 #include "philo.h"
 
-static int ft_init_args(t_args *a, char **av)
+static int	ft_init_args(t_args *a, char **av)
 {
-	int errcode;
+	int	errcode;
 
 	errcode = FUN_NO_ERROR;
 	a->nphilo = ft_positive_atoi_errcode(av[1], &errcode);
@@ -25,7 +25,7 @@ static int ft_init_args(t_args *a, char **av)
 		a->n_meals = -1;
 	return (errcode);
 }
-	
+
 static void	ft_puterr(char const *s)
 {
 	size_t	len;
@@ -36,14 +36,34 @@ static void	ft_puterr(char const *s)
 	write (2, s, len);
 }
 
-int main(int ac, char **av)
+static void	ft_subprocesses(t_args *a, t_sems *sems, pid_t *pids)
 {
-	t_args	a;
-	t_sems	sems;
-	int		iphilo;
-	pid_t	parent;
-	pid_t	*pids;
+	int			iphilo;
+	pid_t		parent;
 	pthread_t	satiation;
+
+	iphilo = 1;
+	while (iphilo <= a->nphilo)
+	{
+		parent = fork();
+		if (parent)
+			pids[iphilo++ - 1] = parent;
+		else
+			ft_philo(iphilo, a, sems, pids);
+	}
+	if (a->n_meals == -1
+		|| ft_sat_thread(a->nphilo, sems, &satiation) == FUN_NO_ERROR)
+		sem_wait(sems->finished_sem);
+	iphilo = 1;
+	while (iphilo <= a->nphilo)
+		kill(pids[iphilo++ - 1], SIGTERM);
+}
+
+int	main(int ac, char **av)
+{
+	t_args		a;
+	t_sems		sems;
+	pid_t		*pids;
 
 	if (!(ac == 5 || ac == 6) || ft_init_args(&a, av) == FUN_ERROR)
 	{
@@ -52,34 +72,12 @@ int main(int ac, char **av)
 		return (1);
 	}
 	ft_init_sems(&sems, a.nphilo);
-	// init pids (TODO move)
-	pids = malloc(a.nphilo * sizeof(pid_t)); // will be copied "needlessly" by children
-	// protect malloc TODO
+	pids = malloc(a.nphilo * sizeof(pid_t));
+	if (!pids)
+		return (1);
+	ft_subprocesses(&a, &sems, pids);
 	ft_timestamp(TS_RESET);
-	iphilo = 1;
-	while (iphilo <= a.nphilo)
-	{
-		parent = fork();
-		if (parent)
-			pids[iphilo++ - 1] = parent;
-		else
-			ft_philo(iphilo, &a, &sems, pids);
-	}
-	// this needs to be after the processes have been launched, 
-	// so that they don't inherit the threads memory 
-	if (a.n_meals == -1
-			|| ft_sat_thread(a.nphilo, &sems, &satiation) == FUN_NO_ERROR)
-		sem_wait(sems.finished_sem);
-// 	if (a->n_meals == -1)
-// 		sem_wait(sems.finished_sem);
-// 	else if (ft_launch_sat_thread(a.nphilo, sems, &satiation) == FUN_NO_ERROR)
-// 		sem_wait(sems.finished_sem);
-	iphilo = 1;
-	while (iphilo <= a.nphilo)
-		kill(pids[iphilo++ - 1], SIGTERM);
 	free(pids);
 	ft_close_sems(&sems);
 	return (0);
 }
-
-

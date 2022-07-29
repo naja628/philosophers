@@ -5,11 +5,10 @@
 #include "satiation_thread.h"
 #include "errcodes.h"
 
-#include <stdio.h>
 void	*ft_satiation_thread(void *data)
 {
-	int		i;
-	t_st_arg *a;
+	int			i;
+	t_st_arg	*a;
 
 	a = (t_st_arg *) data;
 	i = 0;
@@ -21,20 +20,19 @@ void	*ft_satiation_thread(void *data)
 	sem_wait(a->sems->guard_sem);
 	sem_post(a->sems->finished_sem);
 	free(data);
-// 	printf("pre-return \n");
 	return (NULL);
 }
 
-int ft_sat_thread(int nphilo, t_sems *sems, pthread_t *thread_buf)
+int	ft_sat_thread(int nphilo, t_sems *sems, pthread_t *thread_buf)
 {
-	t_st_arg *a;
+	t_st_arg	*a;
+
 	a = malloc(sizeof(t_st_arg));
 	if (!a)
-		return (FUN_ERROR);// problem
+		return (FUN_ERROR);
 	a->sems = sems;
 	a->nphilo = nphilo;
 	pthread_create(thread_buf, NULL, ft_satiation_thread, a);
 	pthread_detach(*thread_buf);
-// 	printf("detaching. %d\n", pthread_detach(*thread_buf));
 	return (FUN_NO_ERROR);
 }

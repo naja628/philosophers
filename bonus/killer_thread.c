@@ -3,10 +3,10 @@
 #include "killer_thread.h"
 #include "timestamp.h"
 
-void *ft_killer_thread(void *arg)
+void	*ft_killer_thread(void *arg)
 {
-	t_kt_data data;
-	int now;
+	t_kt_data	data;
+	int			now;
 
 	data = *(t_kt_data *) arg;
 	now = ft_timestamp(0);
@@ -17,10 +17,9 @@ void *ft_killer_thread(void *arg)
 			sem_wait(data.sems->guard_sem);
 			printf("%d %d %s\n", now, data.iphilo, "died");
 			sem_post(data.sems->finished_sem);
-			// maybe sem_post free_sem
 			return (NULL);
 		}
-		else 
+		else
 			usleep(1000 * (*(data.last_ate) + data.time_to_die - now));
 		now = ft_timestamp(0);
 	}
