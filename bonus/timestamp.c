@@ -16,26 +16,3 @@ unsigned int	ft_timestamp(int reset)
 	diff_ms += ((int) now.tv_usec - (int) start.tv_usec) / 1000;
 	return (diff_ms);
 }
-
-// #include <stdio.h>
-// #include <unistd.h>
-// int main()
-// {
-// 	int now = ft_timestamp(TS_RESET);
-// 	int cnt = 0;
-// 	// one
-// 	while (now < 2000) // 2 sec
-// 	{
-// 		usleep(1);
-// 		++cnt;
-// 		now = ft_timestamp(0);
-// 	}
-// 	printf("count : %d\n", cnt);
-// 	// two
-// 	usleep(1000000);	
-// 	printf("now: %d\n", ft_timestamp(0));
-// 
-// 
-// 	return 0;
-// }
-// // TODO rm ^
