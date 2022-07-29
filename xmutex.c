@@ -6,7 +6,7 @@
 /*   By: najacque <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/14 15:20:52 by najacque          #+#    #+#             */
-/*   Updated: 2022/07/14 15:20:52 by najacque         ###   ########.fr       */
+/*   Updated: 2022/07/29 16:20:28 by najacque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,6 @@ void	ft_destroy_xmutex(t_xmutex *m)
 	pthread_mutex_destroy(&(m->mutex));
 }
 
-#include <stdio.h>
 void	ft_lock_xmutex(t_xmutex *m)
 {
 	pthread_mutex_lock(&(m->mutex));
