@@ -56,7 +56,8 @@ static void	ft_subprocesses(t_args *a, t_sems *sems, pid_t *pids)
 		sem_wait(sems->finished_sem);
 	iphilo = 1;
 	while (iphilo <= a->nphilo)
-		kill(pids[iphilo++ - 1], SIGTERM);
+		kill(pids[iphilo++ - 1], SIGINT);
+	ft_puterr("killed subs\n");
 }
 
 int	main(int ac, char **av)
@@ -75,8 +76,8 @@ int	main(int ac, char **av)
 	pids = malloc(a.nphilo * sizeof(pid_t));
 	if (!pids)
 		return (1);
-	ft_subprocesses(&a, &sems, pids);
 	ft_timestamp(TS_RESET);
+	ft_subprocesses(&a, &sems, pids);
 	free(pids);
 	ft_close_sems(&sems);
 	return (0);
